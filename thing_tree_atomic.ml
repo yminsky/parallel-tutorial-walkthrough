@@ -1,5 +1,4 @@
-open! Base
-open! Stdio
+open! Core
 open! Import
 
 module Mood = struct
@@ -9,23 +8,18 @@ module Mood = struct
     | Sad
 end
 
-module Thing : sig @@ portable
-  type t : mutable_data
-
-  val create : price:float -> mood:Mood.t -> t
-  val price : t @ contended -> float
-  val mood : t -> Mood.t
-  val cheer_up : t -> unit
-end = struct
-  type t =
+(*
+   module Thing = struct
+  type t : immutable_data =
     { price : float
-    ; mutable mood : Mood.t
+    ; mood : Mood.t Atomic.t
     }
 
-  let create ~price ~mood = { price; mood }
-  let price { price; _ } = price
-  let mood { mood; _ } = mood
-  let cheer_up t = t.mood <- Happy
+  let create ~price ~mood = { price; mood = Atomic.make mood }
+  let price t = t.price
+  let mood t = Atomic.get t.mood
+  let cheer_up t = Atomic.set t.mood Happy
+  let bum_out t = Atomic.set t.mood Sad
 end
 
 let average_par par tree =
@@ -58,3 +52,4 @@ let%expect_test _ =
   print_s [%sexp (result : float)];
   [%expect {| 0.5 |}]
 ;;
+*)

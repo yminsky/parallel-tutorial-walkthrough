@@ -146,3 +146,84 @@ function as portable. That pointed straight to Thing.price needing to
 be portable, so I fixed that. It was a little harder to note that
 Thing.price needed to accept a contended Thing.t.  I wonder how hard
 it is going to be for people to track these things down in practice.
+
+# Is Merlin busted?
+
+I noticed it flagging some fake syntax errors. Notably this one:
+
+```
+module Rng : Rng = struct
+  type t = int ref
+
+  let create x = ref x
+
+  let int t =
+    let draw = t.contents in
+    t.contents <- t.contents + 1;
+    draw
+  ;;
+
+  let split t = { contents = t.contents }
+end
+```
+
+It thinks the keyword struct is a syntax error.
+
+# Confusing type errors with things and atomics
+
+I had this bit of code:
+
+```ocaml
+module Thing = struct
+  type t : immutable_data =
+    { price : float
+    ; mood : Mood.t Atomic.t
+    }
+
+  let create ~price ~mood = { price; mood = Atomic.make mood }
+  let price t = t.price
+  let mood t = Atomic.get t.mood
+  let cheer_up t = Atomic.set t.mood Happy
+  let bum_out t = Atomic.set t.mood Sad
+end
+```
+
+And it really doesn't like the immutable_data kind there, despite the
+tutorial recommending it!
+
+```
+File "thing_tree_atomic.ml", lines 12-15, characters 2-5:
+12 | ..type t : immutable_data =
+13 |     { price : float
+14 |     ; mood : Mood.t Atomic.t
+15 |     }
+Error: The kind of type "t" is immutable_data with Mood.t Core.Atomic.t
+         because it's a boxed record type.
+       But the kind of type "t" must be a subkind of immutable_data
+         because of the annotation on the declaration of the type t.
+```
+
+I think this is probably a bug in the tutorial (since just copying the
+code in generates the error), but I find the error message above
+inscrutable.
+
+Is "immutable_data with Mood.t Core.Atomic.t" a different kind than
+immutable_data? What does the "with" syntax do?  Maybe we should bound
+them together to make it clearer? i.e.:
+
+    the kind of type "t" is "immutable_data with Mood.t Core.Atomic.t"
+
+# Whoa, atomics
+
+Playing around with atomics makes me realize I don't really know what
+a data-race is. Also...how are atomics implemented? What are they at a
+lower level of analysis?
+
+Presumably I can still get some kinds of things that we'd call
+"races", but not "data races"?
+
+For example, I guess I can create a parallel program that maps over a
+bunch of numbers, does some computation with them, and then dumps them
+onto a singly-linked list, right? Presumably the ordering of that list
+is non-deterministic if I manage the list as an atomic, and use the
+update mechanism for appending elements.

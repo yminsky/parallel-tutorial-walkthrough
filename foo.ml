@@ -119,6 +119,46 @@ let%expect_test _ =
   [%expect {| 0.49326931303124849 |}]
 ;;
 
+module type Rng = sig @@ portable
+  type t
+
+  val create : int -> t @ unique
+  val int : t @ local -> int
+  val split : t @ local -> t @ unique
+end
+
+(* I mean, not random at all. But trying to get the signature right *)
+module Fake_rng : Rng = struct
+  type t = int ref
+
+  let create x = { contents = x }
+
+  let int t =
+    let draw = t.contents in
+    t.contents <- t.contents + 1;
+    draw
+  ;;
+
+  let split t = { contents = t.contents }
+end
+
+(*
+let rec random_tree_par par rng size : _ Tree.t =
+  if size = 1
+  then Leaf (Rng.int rng)
+  else (
+    let left_size = Rng.int rng in
+    let right_size = size - left_size in
+    let rng' = Rng.split rng in
+    let left, right =
+      Parallel.fork_join2
+        par
+        (fun par -> random_tree_par par rng left_size)
+        (fun par -> random_tree_par par rng' right_size)
+    in
+    Node (left, right))
+;;
+   *)
 (*
    let rec random_tree_par par rng size : _ Tree.t =
   if size = 1
@@ -136,3 +176,54 @@ let%expect_test _ =
     Node (left, right))
 ;;
 *)
+
+let factorial i =
+  let a = ref 1 in
+  let rec loop i =
+    if i > 1
+    then (
+      a := !a * i;
+      loop (i - 1))
+  in
+  loop i;
+  !a
+;;
+
+let%expect_test _ =
+  print_s [%sexp (factorial 2 : int)];
+  [%expect {| 2 |}]
+;;
+
+let (factorial @ portable) i =
+  let a @ uncontended = ref 1 in
+  let rec (loop @ nonportable) i =
+    if i > 1
+    then (
+      a := !a * i;
+      loop (i - 1))
+  in
+  loop i;
+  !a
+;;
+
+let%expect_test _ =
+  print_s [%sexp (factorial 2 : int)];
+  [%expect {| 2 |}]
+;;
+
+let (factorial @ portable) i =
+  let a @ uncontended = ref 1 in
+  let rec (loop @ portable) (a @ uncontended) i =
+    if i > 1
+    then (
+      a := !a * i;
+      loop a (i - 1))
+  in
+  loop a i;
+  !a
+;;
+
+let%expect_test _ =
+  print_s [%sexp (factorial 2 : int)];
+  [%expect {| 2 |}]
+;;
