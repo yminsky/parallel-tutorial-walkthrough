@@ -1,0 +1,6 @@
+(library
+ (name parallel_tutorial)
+ (libraries core async parallel parallel.scheduler.work_stealing)
+ (inline_tests)
+ (preprocess
+  (pps ppx_jane)))
