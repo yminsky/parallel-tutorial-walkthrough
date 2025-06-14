@@ -213,17 +213,10 @@ them together to make it clearer? i.e.:
 
     the kind of type "t" is "immutable_data with Mood.t Core.Atomic.t"
 
-# Whoa, atomics
+# Capsules, expert?
 
-Playing around with atomics makes me realize I don't really know what
-a data-race is. Also...how are atomics implemented? What are they at a
-lower level of analysis?
+Why are we using the expert interface? Are we experts already?
 
-Presumably I can still get some kinds of things that we'd call
-"races", but not "data races"?
+Also, too much magic. I shouldn't have to guess that I need this line!
 
-For example, I guess I can create a parallel program that maps over a
-bunch of numbers, does some computation with them, and then dumps them
-onto a singly-linked list, right? Presumably the ordering of that list
-is non-deterministic if I manage the list as an atomic, and use the
-update mechanism for appending elements.
+    module Capsule = Portable.Capsule.Expert
