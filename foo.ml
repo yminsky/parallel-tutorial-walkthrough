@@ -227,7 +227,3 @@ let%expect_test _ =
   print_s [%sexp (factorial 2 : int)];
   [%expect {| 2 |}]
 ;;
-
-module Capsule = Portable.Capsule.Expert
-
-let key = Capsule.create ()

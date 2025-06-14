@@ -220,3 +220,19 @@ Why are we using the expert interface? Are we experts already?
 Also, too much magic. I shouldn't have to guess that I need this line!
 
     module Capsule = Portable.Capsule.Expert
+
+# keys and passwords
+
+It would be nice to know...why we need a password. I think the real
+reason is that passwords aren't unique, but are instead local, so you
+can use them a bunch of times more conveniently.  Even if that's it,
+it would be good to explain it!
+
+# Slice.fork_join2 seems kinda contrived
+
+I mean, I see why we need it! But what if I want to break up my slice
+in other ways.  Feels a little hacky. (That said, nice to have
+quicksort in the tutorial...)
+
+Though...looking at the implementatino, I'm kinda mystified. I
+expected some unsafe magic.
