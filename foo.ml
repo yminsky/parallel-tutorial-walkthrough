@@ -1,5 +1,6 @@
 open! Base
 open! Stdio
+open! Import
 
 (* ********************************************************************* *)
 (* Simple fork/join parallelism *)
@@ -8,15 +9,6 @@ open! Stdio
 let add4 par a b c d =
   let a_plus_b, c_plus_d = Parallel.fork_join2 par (fun _ -> a + b) (fun _ -> c + d) in
   a_plus_b + c_plus_d
-;;
-
-let run_with_par f =
-  let module Scheduler = Parallel_scheduler_work_stealing in
-  let scheduler = Scheduler.create () in
-  let monitor = Parallel.Monitor.create_root () in
-  let result = Scheduler.schedule scheduler ~monitor ~f in
-  Scheduler.stop scheduler;
-  result
 ;;
 
 let%expect_test _ =

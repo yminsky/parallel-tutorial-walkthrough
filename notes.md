@@ -130,4 +130,19 @@ let rec random_tree_par par rng size : _ Tree.t =
 ;;
 ```
 
-Specifically, the problem is that the second rng'
+Specifically, it can't tell that each rng goes to just one of the
+functions, and is never again used in the parent, so in reality,
+things are fine. But...how do I prove that to the type system!?!
+
+Separately, it is hard to know why your thing isn't portable.
+
+# Fixing the abstractino problem with Thing
+
+That's actually kinda great. It's still a bit tricky to know how to
+track-things down, though.
+
+The first thing I tracked down by annotating the [total_and_count]
+function as portable. That pointed straight to Thing.price needing to
+be portable, so I fixed that. It was a little harder to note that
+Thing.price needed to accept a contended Thing.t.  I wonder how hard
+it is going to be for people to track these things down in practice.
