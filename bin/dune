@@ -1,0 +1,4 @@
+(executable
+ (name main)
+ (link_flags -linkall)
+ (libraries core_bench.inline_benchmarks parallel_tutorial))
