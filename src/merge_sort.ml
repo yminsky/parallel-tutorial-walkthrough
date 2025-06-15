@@ -136,64 +136,21 @@ module Par = struct
 end
 
 (* Benchmarks *)
-module%bench Foo = struct
+module%bench Merge_sort = struct
   let random_iarray size =
     let state = Random.State.make [| 1; 2; 3; 4; 5 |] in
     Iarray.init size ~f:(fun _ -> Random.State.int state 100_000_000)
   ;;
 
-  (* Small arrays *)
-  let%bench_fun "ordinary 100" =
-    let ar = random_iarray 100 in
+  let sizes = [ 100; 1_000; 10_000; 100_000; 1_000_000 ]
+
+  let%bench_fun ("ordinary" [@indexed size = sizes]) =
+    let ar = random_iarray size in
     fun () -> Ordinary.mergesort ar
   ;;
 
-  let%bench_fun "parallel 100" =
-    let ar = random_iarray 100 in
-    fun () -> run_with_par (fun par -> Par.mergesort par ar)
-  ;;
-
-  (* Medium arrays *)
-  let%bench_fun "ordinary 1_000" =
-    let ar = random_iarray 1_000 in
-    fun () -> Ordinary.mergesort ar
-  ;;
-
-  let%bench_fun "parallel 1_000" =
-    let ar = random_iarray 1_000 in
-    fun () -> run_with_par (fun par -> Par.mergesort par ar)
-  ;;
-
-  (* Large arrays *)
-  let%bench_fun "ordinary 10_000" =
-    let ar = random_iarray 10_000 in
-    fun () -> Ordinary.mergesort ar
-  ;;
-
-  let%bench_fun "parallel 10_000" =
-    let ar = random_iarray 10_000 in
-    fun () -> run_with_par (fun par -> Par.mergesort par ar)
-  ;;
-
-  (* Very large arrays *)
-  let%bench_fun "ordinary 100_000" =
-    let ar = random_iarray 100_000 in
-    fun () -> Ordinary.mergesort ar
-  ;;
-
-  let%bench_fun "parallel 100_000" =
-    let ar = random_iarray 100_000 in
-    fun () -> run_with_par (fun par -> Par.mergesort par ar)
-  ;;
-
-  (* Very large arrays *)
-  let%bench_fun "ordinary 1_000_000" =
-    let ar = random_iarray 1_000_000 in
-    fun () -> Ordinary.mergesort ar
-  ;;
-
-  let%bench_fun "parallel 1_000_000" =
-    let ar = random_iarray 1_000_000 in
+  let%bench_fun ("parallel" [@indexed size = sizes]) =
+    let ar = random_iarray size in
     fun () -> run_with_par (fun par -> Par.mergesort par ar)
   ;;
 end
