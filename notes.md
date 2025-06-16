@@ -236,3 +236,23 @@ quicksort in the tutorial...)
 
 Though...looking at the implementatino, I'm kinda mystified. I
 expected some unsafe magic.
+
+# Benchmarking suggests high fixed costs
+
+I did a pretty trivial benchmark. I guess creating a par is really
+expensive?  Costs maybe 2ms?  Here's what I saw:
+
+┌─────────────────────────────────────────────────┬───────────┬────────────────┬──────────────┬─────────────┬────────────┐
+     │ Name                                            │  Prom/Run │       mjWd/Run │     Time/Run │     mWd/Run │ Percentage │
+     ├─────────────────────────────────────────────────┼───────────┼────────────────┼──────────────┼─────────────┼────────────┤
+     │ [src/merge_sort.ml:Merge_sort] ordinary:100     │     0.21w │          0.21w │       9.89us │      1.64kw │            │
+     │ [src/merge_sort.ml:Merge_sort] ordinary:1000    │    12.95w │      3_017.95w │      99.72us │     19.95kw │      0.04% │
+     │ [src/merge_sort.ml:Merge_sort] ordinary:10000   │     1.87w │    110_126.87w │   2_070.81us │    187.11kw │      0.84% │
+     │ [src/merge_sort.ml:Merge_sort] ordinary:100000  │   200.47w │  1_701_221.47w │  21_000.25us │  1_936.84kw │      8.57% │
+     │ [src/merge_sort.ml:Merge_sort] ordinary:1000000 │   827.00w │ 23_009_016.00w │ 245_133.48us │ 19_894.66kw │    100.00% │
+     │ [src/merge_sort.ml:Merge_sort] parallel:100     │ 1_385.03w │      1_730.52w │   2_240.87us │      5.96kw │      0.91% │
+     │ [src/merge_sort.ml:Merge_sort] parallel:1000    │   876.15w │      4_223.13w │   2_621.98us │     24.26kw │      1.07% │
+     │ [src/merge_sort.ml:Merge_sort] parallel:10000   │   901.25w │     28_349.08w │   4_412.60us │     53.39kw │      1.80% │
+     │ [src/merge_sort.ml:Merge_sort] parallel:100000  │ 1_000.13w │    222_730.66w │  13_821.07us │    216.30kw │      5.64% │
+     │ [src/merge_sort.ml:Merge_sort] parallel:1000000 │ 2_249.90w │  2_470_231.30w │ 124_784.94us │  1_082.20kw │     50.90% │
+     └─────────────────────────────────────────────────┴───────────┴────────────────┴──────────────┴─────────────┴────────────┘
