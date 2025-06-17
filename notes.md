@@ -52,9 +52,45 @@ let average_par par tree =
 ```
 
 Oh, that's very confusing. The issue is that you need the damn type
-annotation (tha the return value is a pair of int and float), I guess
+annotation (that the return value is a pair of int and float), I guess
 so that mode-crossing can prove that the result is uncontended.  The
 error message here is not helpful.
+
+I tried to fix this in a different way, by annotating the return value
+of `total_and_count` as immutable data:
+
+```ocaml
+      ((~total, ~count) : ('a : immutable_data))
+```
+
+But that generates an error message I could not grok:
+
+```
+The kind of total:'a * count:int is immutable_data with 'a
+  because it's a tuple type.
+But the kind of total:'a * count:int must be a subkind of immutable_data
+  because of the annotation on the type variable 'a.
+```
+
+In the end, it turns out I can make just the float variable as "value
+mod contended portable" and...that works, somehow? I don't know why
+both sync_data and immutable_data don't work.
+
+Also, it's weird that this is fine:
+
+```ocaml
+    match (tree : (_ : immutable_data) Tree.t) with
+```
+
+and this is a syntax error:
+
+```ocaml
+    match (tree : (float : immutable_data) Tree.t) with
+```
+
+Why can't I put a constraint on the kind of a concrete type?  I mean,
+it might not be true, so it might not typecheck. But why can't I even
+say it?
 
 # modalities
 

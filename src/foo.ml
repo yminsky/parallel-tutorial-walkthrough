@@ -44,8 +44,12 @@ let%expect_test _ =
 ;;
 
 let average_par par tree =
-  let rec total_and_count par tree : total:float * count:int =
-    match (tree : _ Tree.t) with
+  let rec total_and_count par tree =
+    (* TODO: I'd like to understand this better. Neither sync_data nor
+       immutable_data work here, and you really have to mark just the
+       float to make this work. The kind system is still pretty
+       mysterious to me. *)
+    match (tree : (_ : value mod contended portable) Tree.t) with
     | Leaf x -> ~total:x, ~count:1
     | Node (l, r) ->
       let (~total:total_l, ~count:count_l), (~total:total_r, ~count:count_r) =
