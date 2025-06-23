@@ -293,7 +293,7 @@ expensive?  Costs maybe 2ms?  Here's what I saw:
      │ [src/merge_sort.ml:Merge_sort] parallel:1000000 │ 2_249.90w │  2_470_231.30w │ 124_784.94us │  1_082.20kw │     50.90% │
      └─────────────────────────────────────────────────┴───────────┴────────────────┴──────────────┴─────────────┴────────────┘
 
-* It's hard to figure out what Scheduler.stop does.
+# It's hard to figure out what Scheduler.stop does.
 
 You look in scheduler.mli. It's not in there, and is, apparently, in
 Parallel_kernel0.scheduler? In there, I find this amonst a rats nest
@@ -314,3 +314,34 @@ Whoich seems to have no function "stop" in it.
 
 Part of the probelm is that go-to-definition doesn't go properly into
 the libraries. This might be better with a proper duniverse
+
+# Type errors can be confusing!
+
+Maybe this is just a function of OCaml and PPXs? But here's the code:
+
+```ocaml
+  let%bench_fun ("parallel" [@params size_and_threshold = sizes_and_thresholds]) =
+    let ~size, ~seq_thresh = size_and_threshold in
+    let ar = random_iarray size in
+    fun () -> Par_ctx.run ctx (fun par -> Par_simple.mergesort par ar ~seq_thresh)
+  ;;
+```
+
+This is for doing some parallel benchmarking, wrestling ppx_bench into
+doing what I want. (Maybe that's the mistake?)
+
+But then, I get this error:
+
+```
+Error: This expression has type
+         "(size:int * seq_thresh:int) @ portable ->
+         int iarray Ppx_bench_lib.Benchmark_accumulator.Entry.thunk"
+       but an expression was expected of type
+         "(size:int * seq_thresh:int) ->
+         'a Ppx_bench_lib.Benchmark_accumulator.Entry.thunk"
+```
+
+Thw two differences appear to be the 'a and int array type parameters
+to ppx_bench_lib. And...the extra @portable on the expression?
+
+Generally speaking the error message here is pretty inscrutable.

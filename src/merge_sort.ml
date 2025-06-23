@@ -64,7 +64,7 @@ module Ordinary = struct
   ;;
 end
 
-module Par = struct
+module Par_simple = struct
   let merge (f : int iarray) (s : int iarray) =
     Iarray.create
       0
@@ -94,25 +94,30 @@ module Par = struct
         loop ~f_idx:0 ~s_idx:0 ~dest_idx:0 [@nontail])
   ;;
 
-  let rec mergesort par (array : int iarray) : int iarray =
-    if Iarray.length array <= 1000
-    then Ordinary.mergesort array
-    else (
-      match Iarray.length array with
-      | 0 | 1 -> array
-      | _ ->
-        let half = Iarray.length array / 2 in
-        let first, second =
-          Parallel.fork_join2
-            par
-            (fun par ->
-              let first = Iarray.sub array ~pos:0 ~len:half in
-              mergesort par first)
-            (fun par ->
-              let second = Iarray.sub array ~pos:half ~len:(Iarray.length array - half) in
-              mergesort par second)
-        in
-        merge first second)
+  let mergesort par (array : int iarray) ~seq_thresh : int iarray =
+    let rec loop par array : int iarray =
+      if Iarray.length array <= seq_thresh
+      then Ordinary.mergesort array
+      else (
+        match Iarray.length array with
+        | 0 | 1 -> array
+        | _ ->
+          let half = Iarray.length array / 2 in
+          let first, second =
+            Parallel.fork_join2
+              par
+              (fun par ->
+                let first = Iarray.sub array ~pos:0 ~len:half in
+                loop par first)
+              (fun par ->
+                let second =
+                  Iarray.sub array ~pos:half ~len:(Iarray.length array - half)
+                in
+                loop par second)
+          in
+          merge first second)
+    in
+    loop par array
   ;;
 
   let%expect_test _ =
@@ -125,11 +130,13 @@ module Par = struct
      362 989 317 935 687 576 189 665 691 730 519 914 658 477 504 701 203 410 177
      372 598 841 139 942 827 296 50 201 18 886 996)
     |}];
-    let result = Par_ctx.run (Par_ctx.create ()) (fun par -> mergesort par ar) in
+    let result =
+      Par_ctx.run (Par_ctx.create ()) (fun par -> mergesort par ar ~seq_thresh:1)
+    in
     print_s [%sexp (result : int iarray)];
     [%expect
       {|
-      Domains: [undefined]\n
+      Domains: [default]\n
       (18 44 50 117 127 139 177 189 201 203 250 278 296 317 320 362 372 410 419 477
        504 519 525 549 576 598 625 649 658 665 687 691 701 730 734 769 769 827 841
        842 886 900 914 916 929 930 935 942 989 996)
@@ -137,7 +144,10 @@ module Par = struct
   ;;
 end
 
+(* CR yminsky: Fix this. it's clearly busted for a small type thing I don't understand. *)
 (* Benchmarks *)
+(*
+
 module%bench Merge_sort = struct
   let random_iarray size =
     let state = Random.State.make [| 1; 2; 3; 4; 5 |] in
@@ -152,9 +162,19 @@ module%bench Merge_sort = struct
   ;;
 
   let ctx = Par_ctx.create ()
+  let seq_thresh = [ 1; 10; 100; 1000; 10_000 ]
 
-  let%bench_fun ("parallel" [@indexed size = sizes]) =
+  let sizes_and_thresholds =
+    List.cartesian_product sizes seq_thresh
+    |> List.map ~f:(fun (size, seq_thresh) ->
+      let label = sprintf "size: %d, seq_thresh: %d" size seq_thresh in
+      label, (~size, ~seq_thresh))
+  ;;
+
+     let%bench_fun ("parallel" [@params size_and_threshold = sizes_and_thresholds]) =
+    let ~size, ~seq_thresh = size_and_threshold in
     let ar = random_iarray size in
-    fun () -> Par_ctx.run ctx (fun par -> Par.mergesort par ar)
+    fun () -> Par_ctx.run ctx (fun par -> Par_simple.mergesort par ar ~seq_thresh)
   ;;
 end
+  *)

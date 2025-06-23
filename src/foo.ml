@@ -15,7 +15,7 @@ let%expect_test _ =
   let result = Par_ctx.run (Par_ctx.create ()) (fun par -> add4 par 1 10 100 1000) in
   print_s [%sexp (result : int)];
   [%expect {|
-    Domains: [undefined]\n
+    Domains: [default]\n
     1111
     |}]
 ;;
@@ -80,7 +80,7 @@ let%expect_test _ =
   let result = Par_ctx.run ctx (fun par -> average_par par test_tree) in
   print_s [%sexp (result : float)];
   [%expect {|
-    Domains: [undefined]\n
+    Domains: [default]\n
     4
     |}]
 ;;
@@ -135,7 +135,7 @@ let%expect_test _ =
   let avg = par_run (Par_ctx.create ()) (fun par -> average_par par random_tree) in
   print_s [%sexp (avg : float)];
   [%expect {|
-    Domains: [undefined]\n
+    Domains: [default]\n
     0.49326931303124849
     |}]
 ;;

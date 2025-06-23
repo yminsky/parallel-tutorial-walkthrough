@@ -59,7 +59,7 @@ let%expect_test _ =
   in
   print_s [%sexp (result : float)];
   [%expect {|
-    Domains: [undefined]\n
+    Domains: [default]\n
     0.5
     |}]
 ;;
