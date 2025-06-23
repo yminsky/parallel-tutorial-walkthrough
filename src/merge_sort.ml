@@ -4,6 +4,13 @@ module Capsule = Portable.Capsule.Expert
 module Par_array = Parallel.Arrays.Array
 module Slice = Parallel.Arrays.Array.Slice
 
+(** This is an attempt to do an efficient merge-sort. It's not great now because it needs
+    to do a lot of copying.
+
+    TODO: we should figure out how to do this with just a single copy of the array, and
+    some ping-ponging back and forth. The trick thing will be to do a fork-join on slices
+    of a parallel array, in unison. *)
+
 module Ordinary = struct
   let merge f s =
     Iarray.create
