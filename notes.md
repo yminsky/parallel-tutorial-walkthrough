@@ -292,3 +292,25 @@ expensive?  Costs maybe 2ms?  Here's what I saw:
      │ [src/merge_sort.ml:Merge_sort] parallel:100000  │ 1_000.13w │    222_730.66w │  13_821.07us │    216.30kw │      5.64% │
      │ [src/merge_sort.ml:Merge_sort] parallel:1000000 │ 2_249.90w │  2_470_231.30w │ 124_784.94us │  1_082.20kw │     50.90% │
      └─────────────────────────────────────────────────┴───────────┴────────────────┴──────────────┴─────────────┴────────────┘
+
+* It's hard to figure out what Scheduler.stop does.
+
+You look in scheduler.mli. It's not in there, and is, apparently, in
+Parallel_kernel0.scheduler? In there, I find this amonst a rats nest
+of multually recursive module definitions:
+
+```ocaml
+and Scheduler : sig @@ portable
+  type t =
+    #{ monitor : Panic.Monitor.t
+     ; promote : (unit -> unit) @ once portable -> unit @@ portable
+     ; wake : n:int -> unit @@ portable
+     }
+end =
+  Scheduler
+```
+
+Whoich seems to have no function "stop" in it.
+
+Part of the probelm is that go-to-definition doesn't go properly into
+the libraries. This might be better with a proper duniverse

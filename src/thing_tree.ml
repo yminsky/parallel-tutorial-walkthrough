@@ -29,8 +29,8 @@ end = struct
 end
 
 let average_par par tree =
-  let rec (total_and_count @ portable) par (tree @ contended) : total:float * count:int =
-    match (tree : Thing.t Tree.t) with
+  let rec total_and_count par tree =
+    match (tree : _ Tree.t) with
     | Leaf thing -> ~total:(Thing.price thing), ~count:1
     | Node (l, r) ->
       let (~total:total_l, ~count:count_l), (~total:total_r, ~count:count_r) =
@@ -54,7 +54,7 @@ let test_thing_tree =
 ;;
 
 let%expect_test _ =
-  let result = run_with_par (fun par -> average_par par test_thing_tree) in
+  let result = par_run (Run_ctx.create ()) (fun par -> average_par par test_thing_tree) in
   print_s [%sexp (result : float)];
   [%expect {| 0.5 |}]
 ;;

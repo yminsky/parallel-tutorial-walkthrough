@@ -149,8 +149,10 @@ module%bench Merge_sort = struct
     fun () -> Ordinary.mergesort ar
   ;;
 
+  let ctx = Run_ctx.create ()
+
   let%bench_fun ("parallel" [@indexed size = sizes]) =
     let ar = random_iarray size in
-    fun () -> run_with_par (fun par -> Par.mergesort par ar)
+    fun () -> par_run ctx (fun par -> Par.mergesort par ar)
   ;;
 end

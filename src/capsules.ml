@@ -42,33 +42,72 @@ let partition slice =
   !store
 ;;
 
-let rec quicksort slice =
-  if Slice.length slice > 1
-  then (
-    let pivot = partition slice in
-    let length = Slice.length slice in
-    let left = Slice.sub slice ~i:0 ~j:pivot in
-    let right = Slice.sub slice ~i:pivot ~j:length in
-    quicksort left;
-    quicksort right [@nontail])
-;;
+module Par_quickstort_1 = struct
+  let rec quicksort slice =
+    if Slice.length slice > 1
+    then (
+      let pivot = partition slice in
+      let length = Slice.length slice in
+      let left = Slice.sub slice ~i:0 ~j:pivot in
+      let right = Slice.sub slice ~i:pivot ~j:length in
+      quicksort left;
+      quicksort right [@nontail])
+  ;;
 
-let () = ignore quicksort
+  let () = ignore quicksort
 
-(*
-   let rec quicksort parallel slice =
-  if Slice.length slice > 1
-  then (
-    let pivot = partition slice in
-    let length = Slice.length slice in
-    let left = Slice.sub slice ~i:0 ~j:pivot in
-    let right = Slice.sub slice ~i:pivot ~j:length in
-    let (), () =
-      Parallel.fork_join2
-        parallel
-        (fun parallel -> quicksort parallel left)
-        (fun parallel -> quicksort parallel right)
-    in
-    ())
-;;
-*)
+  (*
+     let rec quicksort par slice =
+    if Slice.length slice > 1
+    then (
+      let pivot = partition slice in
+      let length = Slice.length slice in
+      let left = Slice.sub slice ~i:0 ~j:pivot in
+      let right = Slice.sub slice ~i:pivot ~j:length in
+      let (), () =
+        Parallel.fork_join2
+          par
+          (fun par -> quicksort par left)
+          (fun par -> quicksort par right)
+      in
+      ())
+  ;; *)
+end
+
+module Par_quickstort_2 = struct
+  let quicksort = Par_quickstort_1.quicksort
+
+  (*
+     let rec quicksort par slice =
+    if Slice.length slice > 1
+    then (
+      let pivot = partition slice in
+      let length = Slice.length slice in
+      let left = Slice.sub slice ~i:0 ~j:pivot in
+      let right = Slice.sub slice ~i:pivot ~j:length in
+      let (), () =
+        Parallel.fork_join2
+          par
+          (fun par -> quicksort par left)
+          (fun par -> quicksort par right)
+      in
+      ())
+  ;; *)
+end
+
+module Tutorial_quicksort = struct
+  let rec quicksort par slice =
+    if Slice.length slice > 1
+    then (
+      let pivot = partition slice in
+      let (), () =
+        Slice.fork_join2
+          par
+          ~pivot
+          slice
+          (fun par left -> quicksort par left)
+          (fun par right -> quicksort par right)
+      in
+      ())
+  ;;
+end

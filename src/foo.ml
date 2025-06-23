@@ -12,7 +12,7 @@ let add4 par a b c d =
 ;;
 
 let%expect_test _ =
-  let result = run_with_par (fun par -> add4 par 1 10 100 1000) in
+  let result = par_run (Run_ctx.create ()) (fun par -> add4 par 1 10 100 1000) in
   print_s [%sexp (result : int)];
   [%expect {| 1111 |}]
 ;;
@@ -66,8 +66,16 @@ let average_par par tree =
   total /. Float.of_int count
 ;;
 
+let par_run (ctx : Run_ctx.t) f =
+  let result = Scheduler.schedule ctx.scheduler ~monitor:ctx.monitor ~f in
+  Scheduler.stop ctx.scheduler;
+  result
+;;
+
 let%expect_test _ =
-  print_s [%sexp (run_with_par (fun par -> average_par par test_tree) : float)];
+  let ctx = Run_ctx.create () in
+  let result = par_run ctx (fun par -> average_par par test_tree) in
+  print_s [%sexp (result : float)];
   [%expect {| 4 |}]
 ;;
 
