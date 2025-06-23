@@ -12,9 +12,12 @@ let add4 par a b c d =
 ;;
 
 let%expect_test _ =
-  let result = par_run (Run_ctx.create ()) (fun par -> add4 par 1 10 100 1000) in
+  let result = Par_ctx.run (Par_ctx.create ()) (fun par -> add4 par 1 10 100 1000) in
   print_s [%sexp (result : int)];
-  [%expect {| 1111 |}]
+  [%expect {|
+    Domains: [undefined]\n
+    1111
+    |}]
 ;;
 
 (* ********************************************************************* *)
@@ -66,17 +69,20 @@ let average_par par tree =
   total /. Float.of_int count
 ;;
 
-let par_run (ctx : Run_ctx.t) f =
+let par_run (ctx : Par_ctx.t) f =
   let result = Scheduler.schedule ctx.scheduler ~monitor:ctx.monitor ~f in
   Scheduler.stop ctx.scheduler;
   result
 ;;
 
 let%expect_test _ =
-  let ctx = Run_ctx.create () in
-  let result = par_run ctx (fun par -> average_par par test_tree) in
+  let ctx = Par_ctx.create () in
+  let result = Par_ctx.run ctx (fun par -> average_par par test_tree) in
   print_s [%sexp (result : float)];
-  [%expect {| 4 |}]
+  [%expect {|
+    Domains: [undefined]\n
+    4
+    |}]
 ;;
 
 let rec random_tree rng size : _ Tree.t =
@@ -126,9 +132,12 @@ let%expect_test _ =
         (Leaf 0.16153855632349845))
        (Node (Leaf 0.58384236731122763) (Leaf 0.31807143139542415)))))
     |}];
-  let avg = run_with_par (fun par -> average_par par random_tree) in
+  let avg = par_run (Par_ctx.create ()) (fun par -> average_par par random_tree) in
   print_s [%sexp (avg : float)];
-  [%expect {| 0.49326931303124849 |}]
+  [%expect {|
+    Domains: [undefined]\n
+    0.49326931303124849
+    |}]
 ;;
 
 module type Rng = sig @@ portable

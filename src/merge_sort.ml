@@ -125,13 +125,15 @@ module Par = struct
      362 989 317 935 687 576 189 665 691 730 519 914 658 477 504 701 203 410 177
      372 598 841 139 942 827 296 50 201 18 886 996)
     |}];
-    print_s [%sexp (run_with_par (fun par -> mergesort par ar) : int iarray)];
+    let result = Par_ctx.run (Par_ctx.create ()) (fun par -> mergesort par ar) in
+    print_s [%sexp (result : int iarray)];
     [%expect
       {|
-    (18 44 50 117 127 139 177 189 201 203 250 278 296 317 320 362 372 410 419 477
-     504 519 525 549 576 598 625 649 658 665 687 691 701 730 734 769 769 827 841
-     842 886 900 914 916 929 930 935 942 989 996)
-    |}]
+      Domains: [undefined]\n
+      (18 44 50 117 127 139 177 189 201 203 250 278 296 317 320 362 372 410 419 477
+       504 519 525 549 576 598 625 649 658 665 687 691 701 730 734 769 769 827 841
+       842 886 900 914 916 929 930 935 942 989 996)
+      |}]
   ;;
 end
 
@@ -139,20 +141,20 @@ end
 module%bench Merge_sort = struct
   let random_iarray size =
     let state = Random.State.make [| 1; 2; 3; 4; 5 |] in
-    Iarray.init size ~f:(fun _ -> Random.State.int state 100_000_000)
+    Iarray.init size ~f:(fun _ -> Random.State.int state 10_000_000_000)
   ;;
 
-  let sizes = [ 100; 1_000; 10_000; 100_000; 1_000_000 ]
+  let sizes = [ 100; 1_000; 10_000; 100_000; 1_000_000; 10_000_000 ]
 
   let%bench_fun ("ordinary" [@indexed size = sizes]) =
     let ar = random_iarray size in
     fun () -> Ordinary.mergesort ar
   ;;
 
-  let ctx = Run_ctx.create ()
+  let ctx = Par_ctx.create ()
 
   let%bench_fun ("parallel" [@indexed size = sizes]) =
     let ar = random_iarray size in
-    fun () -> par_run ctx (fun par -> Par.mergesort par ar)
+    fun () -> Par_ctx.run ctx (fun par -> Par.mergesort par ar)
   ;;
 end

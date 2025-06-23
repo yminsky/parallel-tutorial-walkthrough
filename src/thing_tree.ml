@@ -54,7 +54,12 @@ let test_thing_tree =
 ;;
 
 let%expect_test _ =
-  let result = par_run (Run_ctx.create ()) (fun par -> average_par par test_thing_tree) in
+  let result =
+    Par_ctx.run (Par_ctx.create ()) (fun par -> average_par par test_thing_tree)
+  in
   print_s [%sexp (result : float)];
-  [%expect {| 0.5 |}]
+  [%expect {|
+    Domains: [undefined]\n
+    0.5
+    |}]
 ;;
